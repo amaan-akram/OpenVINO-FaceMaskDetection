@@ -137,4 +137,8 @@ testData/
 pred/
 *.pth
 *.model
+*.jpg
+*.png
+*.jpeg
+
 
