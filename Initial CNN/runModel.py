@@ -15,7 +15,7 @@ import cv2
 pred_path = 'pred'
 train_path = 'data'
 root=pathlib.Path(train_path)
-classes=['mask', 'no_mask']
+classes = ['mask', 'no_mask']
 
 
 # CNN Network
