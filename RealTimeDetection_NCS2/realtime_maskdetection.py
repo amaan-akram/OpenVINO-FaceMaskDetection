@@ -128,7 +128,7 @@ while True:
                 # using frame[y1:y2, x1:x2].
                 # expand ROI frame slightly by lowering the values of y1 and x1 and increasing y2,x2.
                 # this insures the face is not too cropped in
-                Frame_ROI = frame[y1 - 100:y2 + 100, x1 - 50:x2 + 50]
+                Frame_ROI = frame[y1 - 50:y2 + 50, x1 - 25:x2 + 25]
 
                 # get mask predictions with new cropped fram from NCS
                 mask_predictions = mask_predict(Frame_ROI, mask_net)
