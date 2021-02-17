@@ -18,6 +18,7 @@ start = time.time()
 HQ_RMFD = '../DATASETS/HQ-RMFD'
 RMFD = '../DATASETS/RMFD'
 SMFD = '../DATASETS/SMFD'
+ALL_DATA = '../DATASETS/ALL_DATA'
 
 #CHANGE THIS VARIABLE TO TRAIN WITH DIFFERENT DATASETS ABOVE
 trainDIR = HQ_RMFD
@@ -117,6 +118,21 @@ _, predicted = torch.max(outputs, 1)
 
 print('Predicted: ', ' '.join('%5s' % classes[predicted[j]]
                               for j in range(4)))
+
+correct = 0
+total = 0
+with torch.no_grad():
+    for data in testLoader:
+        images, labels = data
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = net(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+
+print('Accuracy of the network on the 10000 test images: %d %%' % (
+    100 * correct / total))
 
 end = time.time()
 print("run time:",  end - start , "s")
