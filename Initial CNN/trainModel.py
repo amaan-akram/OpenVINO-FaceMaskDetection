@@ -136,10 +136,21 @@ print('Accuracy of the network on the 10000 test images: %d %%' % (
 
 end = time.time()
 print("run time:",  end - start , "s")
-"""
-images, labels = trainSet[2000]
-# show images
-showImg(images)
-print(labels)
 
-"""
+net.eval()
+
+# Input to the model
+x = torch.randn(4, 3, 32, 32, requires_grad=True).to(device)
+torch_out = net(x)
+
+# Export the model
+torch.onnx.export(net,               # model being run
+                  x,                         # model input (or a tuple for multiple inputs)
+                  "maskDetection.onnx",   # where to save the model (can be a file or file-like object)
+                  export_params=True,        # store the trained parameter weights inside the model file
+                  opset_version=10,          # the ONNX version to export the model to
+                  do_constant_folding=True,  # whether to execute constant folding for optimization
+                  input_names = ['input'],   # the model's input names
+                  output_names = ['output'], # the model's output names
+                  dynamic_axes={'input' : {0 : 'batch_size'},    # variable lenght axes
+                                'output' : {0 : 'batch_size'}})
