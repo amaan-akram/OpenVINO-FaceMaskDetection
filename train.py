@@ -18,7 +18,7 @@ TRAIN = 'ALL_DATA'
 TEST = 'test'
 
 mean = np.array([0.5, 0.5, 0.5])
-std = np.array([0.25, 0.25, 0.25])
+std = np.array([0.5, 0.5, 0.5])
 
 #transform Training and Testing image inputs.
 data_transforms = {
@@ -42,6 +42,7 @@ image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
 dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4,
                                              shuffle=True, num_workers=0)
               for x in [TRAIN, TEST]}
+
 dataset_sizes = {x: len(image_datasets[x]) for x in [TRAIN, TEST]}
 class_names = image_datasets[TRAIN].classes
 
@@ -139,76 +140,37 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=10):
     return model
 
 
-#### Finetuning the convnet ####
-# Load a pretrained model and reset final fully connected layer.
 
-model = models.resnet101(pretrained=True)
+#### ConvNet as fixed feature extractor ####
+# Here, we need to freeze all the network except the final layer.
+# We need to set requires_grad == False to freeze the parameters so that the gradients are not computed in backward()
+model = torchvision.models.resnet101(pretrained=True)
+for param in model.parameters():
+    param.requires_grad = False
+
 num_ftrs = model.fc.in_features
-# Here the size of each output sample is set to 2.
-# Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
 model.fc = nn.Linear(num_ftrs, 2)
 
 model = model.to(device)
 
 criterion = nn.CrossEntropyLoss()
 
-# Observe that all parameters are being optimized
-optimizer = optim.SGD(model.parameters(), lr=0.001)
-
-# StepLR Decays the learning rate of each parameter group by gamma every step_size epochs
-# Decay LR by a factor of 0.1 every 7 epochs
-# Learning rate scheduling should be applied after optimizer’s update
-# e.g., you should write your code this way:
-# for epoch in range(100):
-#     train(...)
-#     validate(...)
-#     scheduler.step()
-
-step_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-
-model = train_model(model, criterion, optimizer, step_lr_scheduler, num_epochs=10)
-
-
-#### ConvNet as fixed feature extractor ####
-# Here, we need to freeze all the network except the final layer.
-# We need to set requires_grad == False to freeze the parameters so that the gradients are not computed in backward()
-model_conv = torchvision.models.resnet101(pretrained=True)
-for param in model_conv.parameters():
-    param.requires_grad = False
-
-# Parameters of newly constructed modules have requires_grad=True by default
-num_ftrs = model_conv.fc.in_features
-model_conv.fc = nn.Linear(num_ftrs, 2)
-
-model_conv = model_conv.to(device)
-
-criterion = nn.CrossEntropyLoss()
-
-# Observe that only parameters of final layer are being optimized as
-# opposed to before.
-optimizer_conv = optim.SGD(model_conv.fc.parameters(), lr=0.001, momentum=0.9)
+optimizer_conv = optim.SGD(model.fc.parameters(), lr=0.001, momentum=0.9)
 
 # Decay LR by a factor of 0.1 every 7 epochs
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer_conv, step_size=7, gamma=0.1)
 
-model_conv = train_model(model_conv, criterion, optimizer_conv,
+model = train_model(model, criterion, optimizer_conv,
                          exp_lr_scheduler, num_epochs=10)
 
 # set the model to inference mode
-model_conv.eval()
 model.eval()
 x = torch.randn(1, 3, 256, 256, requires_grad=True).to(device)
 
-
-# Export the model
-torch.onnx.export(model_conv,               # model being run
-                  x,                         # model input (or a tuple for multiple inputs)
-                  "mask_conv_resnet101.onnx",   # where to save the model (can be a file or file-like object)
-                  )
 # Export the model
 torch.onnx.export(model,               # model being run
-                  x,                         # model input (or a tuple for multiple inputs)
-                  "mask_resnet101.onnx",   # where to save the model (can be a file or file-like object)
+                  x,                         # model input
+                  "mask_resnet101.onnx",   # saving dirs
                   )
 
 
