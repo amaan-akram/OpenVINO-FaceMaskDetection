@@ -2,7 +2,7 @@
 Face mask detection using ~~pre-trained~~ pytorch trained models and OpenVINO. Designed with the purpose of using it on Intel® Neural Compute Stick 2 (Intel® Ncs2)
 
 ## Full File System Download
-Download the full >2.5gb file system [here](https://www2.macs.hw.ac.uk/~aa322/dissertation/) including all the models trained and the datasets used.
+Download the full ~2.5gb file system [here](https://www2.macs.hw.ac.uk/~aa322/dissertation/) including all the models trained and the datasets used.
 
 ## Technologies Used
 This project is created with:
